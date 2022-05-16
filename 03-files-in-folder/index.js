@@ -2,19 +2,20 @@ const path = require('path');
 const fs = require('fs');
 const { stdout } = process;
 
-let folder = path.join(__dirname, 'secret-folder');
+const folder = path.join(__dirname, 'secret-folder');
 
 fs.readdir(folder, (err, files) => {
   if (err) console.log(err);
   else {
-    console.log('\nCurrent directory filenames:');
     files.forEach((file) => {
-      fs.stat(path.resolve(__dirname, 'secret-folder', file), (err, stats) => {
+      const fileName = path.resolve(folder, file);
+      fs.stat(fileName, (err, stats) => {
         if (err) {
           console.log(err);
         } else {
           if (!stats.isDirectory()) {
-            console.log(file);
+            const info = path.parse(fileName);
+            stdout.write(`${info.name} - ${info.ext.slice(1)} - ${stats.size}b\n`);
           }
         }
       });

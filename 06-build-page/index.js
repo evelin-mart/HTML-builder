@@ -17,9 +17,9 @@ const output = path.join(__dirname, 'project-dist');
     });
   }
 
-  //copy assets
+  // copy assets
   let input = path.join(__dirname, 'assets');
-  let assets = path.join(output, 'assets');
+  const assets = path.join(output, 'assets');
 
   await fs.promises.mkdir(assets, (err) => {
     if (err) console.log(err);
@@ -50,4 +50,60 @@ const output = path.join(__dirname, 'project-dist');
   };
 
   deepCopy(input, assets);
+
+  // merge styles
+
+  input = path.join(__dirname, 'styles');
+  const styles = path.join(output, 'styles.css');
+
+  fs.open(styles, 'w', (err) => {
+    if (err) console.log(err);
+  });
+
+  fs.readdir(input, (err, files) => {
+    if (err) console.log(err);
+    else {
+      files.forEach((file) => {
+        if (path.extname(file).match('.css')) {
+          const stream = fs.createReadStream(path.resolve(input, file), 'utf-8');
+          stream.on('data', (chunk) =>
+            fs.appendFile(styles, chunk, (err) => {
+              if (err) {
+                console.log(err);
+              }
+            }),
+          );
+        }
+      });
+    }
+  });
+
+  // build html
+
+  const source = path.join(__dirname, 'template.html');
+  const components = path.join(__dirname, 'components');
+  const index = path.join(output, 'index.html');
+  const templates = {};
+
+  fs.open(index, 'w', (err) => {
+    if (err) console.log(err);
+  });
+
+  await fs.promises.readdir(components, { withFileTypes: true }, (err, files) => {
+    if (err) console.log(err);
+    else {
+      files.forEach((file) => {
+        if (path.extname(file.name).match('.html')) {
+          const data = '';
+          const streamIn = fs.createReadStream(path.resolve(components, file.name), 'utf8');
+          const streamOut = fs.createWriteStream(data, 'utf8');
+          streamIn.pipe(streamOut);
+          streamOut.on('close', () => {
+            console.log(data);
+            templates[file.name.slice(0, -5)] = data;
+          });
+        }
+      });
+    }
+  });
 })();

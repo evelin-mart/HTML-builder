@@ -3,8 +3,8 @@ const fs = require('fs');
 
 const output = path.join(__dirname, 'project-dist');
 
-//clear dist
 (async () => {
+  // clear dist
   try {
     await fs.promises.rm(output, { recursive: true }, (err) => {
       if (err) throw err;
@@ -54,7 +54,7 @@ const output = path.join(__dirname, 'project-dist');
   // merge styles
 
   input = path.join(__dirname, 'styles');
-  const styles = path.join(output, 'styles.css');
+  const styles = path.join(output, 'style.css');
 
   fs.open(styles, 'w', (err) => {
     if (err) console.log(err);
@@ -80,30 +80,38 @@ const output = path.join(__dirname, 'project-dist');
 
   // build html
 
-  const source = path.join(__dirname, 'template.html');
   const components = path.join(__dirname, 'components');
-  const index = path.join(output, 'index.html');
   const templates = {};
 
-  fs.open(index, 'w', (err) => {
-    if (err) console.log(err);
-  });
-
-  await fs.promises.readdir(components, { withFileTypes: true }, (err, files) => {
+  fs.readdir(components, { withFileTypes: true }, (err, files) => {
     if (err) console.log(err);
     else {
-      files.forEach((file) => {
+      files.forEach(async (file) => {
         if (path.extname(file.name).match('.html')) {
-          const data = '';
-          const streamIn = fs.createReadStream(path.resolve(components, file.name), 'utf8');
-          const streamOut = fs.createWriteStream(data, 'utf8');
-          streamIn.pipe(streamOut);
-          streamOut.on('close', () => {
-            console.log(data);
-            templates[file.name.slice(0, -5)] = data;
+          // templates[file.name.slice(0, -5)] = await fs.promises.readFile(
+          //   path.resolve(components, file.name),
+          //   'utf8',
+          // );
+          const stream = fs.createReadStream(path.resolve(components, file.name), 'utf8');
+          stream.on('data', (chunk) => {
+            templates[file.name.slice(0, -5)] += chunk;
           });
         }
       });
+    }
+  });
+
+  let source = await fs.promises.readFile(path.join(__dirname, 'template.html'), 'utf8');
+  for (let tag in templates) {
+    source = source.replace(`{{${tag}}}`, templates[tag]);
+  }
+  // console.log(source);
+
+  const index = path.join(output, 'index.html');
+
+  fs.writeFile(index, source, (err) => {
+    if (err) {
+      console.log(err);
     }
   });
 })();

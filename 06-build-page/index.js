@@ -88,10 +88,7 @@ const output = path.join(__dirname, 'project-dist');
     else {
       files.forEach(async (file) => {
         if (path.extname(file.name).match('.html')) {
-          // templates[file.name.slice(0, -5)] = await fs.promises.readFile(
-          //   path.resolve(components, file.name),
-          //   'utf8',
-          // );
+          templates[file.name.slice(0, -5)] = '';
           const stream = fs.createReadStream(path.resolve(components, file.name), 'utf8');
           stream.on('data', (chunk) => {
             templates[file.name.slice(0, -5)] += chunk;
@@ -105,7 +102,6 @@ const output = path.join(__dirname, 'project-dist');
   for (let tag in templates) {
     source = source.replace(`{{${tag}}}`, templates[tag]);
   }
-  // console.log(source);
 
   const index = path.join(output, 'index.html');
 

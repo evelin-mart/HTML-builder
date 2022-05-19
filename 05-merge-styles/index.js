@@ -14,10 +14,10 @@ fs.readdir(input, (err, files) => {
   } else {
     files.forEach((file) => {
       const fileName = path.resolve(input, file);
-      if (path.extname(fileName).match('.css')) {
+      if (path.extname(file).match('.css')) {
         const stream = fs.createReadStream(fileName, 'utf-8');
         stream.on('data', (chunk) => {
-          fs.appendFile(output, chunk.toString(), (err) => {
+          fs.appendFile(output, chunk, (err) => {
             if (err) {
               console.log(err);
             }
